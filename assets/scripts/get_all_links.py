@@ -1,25 +1,30 @@
 import json;
 import requests;
 import sys;
+from time import gmtime, strftime
 from bs4 import BeautifulSoup;
 
 
 
 
-def load (links_file_url, iter_count=0):
-    def get_main_site_data (url = "https://sz.de"):
-        page_data = requests.get(url);
-        soup = BeautifulSoup(page_data.text, features="lxml");
-        
+def load (links_file_url, search, start=1, stop=30):
+    def get_search_data (search = "Coronavirus", stop = 11, start = 1):
         links = [];
-        keep = ["reise", "karriere", "wissen", "thema", "auto", "kultur", "panorama", "bildung", "politik"]
+        for page in range(start, stop):
+            url = "https://sz.de/news/page/" + str(page) + "?search=" + search;
+            page_data = requests.get(url);
+            soup = BeautifulSoup(page_data.text, features="lxml");
 
-        for a in soup.find_all('a', href=True):
-            for element in keep:
-                if "https://www.sueddeutsche.de/" + element + "/" in a["href"] and len("https://www.sueddeutsche.de/" + element + "/") < len(a["href"]):
-                    links.append(a["href"]);
-            
+            keep = ["reise", "karriere", "wissen", "thema", "auto", "kultur", "panorama", "bildung", "politik"]
+
+            for a in soup.find_all('a', class_="entrylist__link"):
+                for element in keep:
+                    if "https://www.sueddeutsche.de/" + element + "/" in a["href"] and len("https://www.sueddeutsche.de/" + element + "/") < len(a["href"]):
+                        links.append(a["href"]);
+            print(f"get_search_data: DID {page - start} / {stop - start}");
+                    
         return(links);
+    
         
 
 
@@ -28,28 +33,19 @@ def load (links_file_url, iter_count=0):
         links = json.load(f);
 
 
-    do_length = len(get_main_site_data());
     done = 0;
 
-    link_data = get_main_site_data();
+    link_data = get_search_data(search=search, start=start, stop=stop);
 
-    for i in range(0, iter_count):
-        for element in link_data:
-            links_amount_start = len(links);
-            if not element in links:
-                links.append(element);
-                for element in get_main_site_data(url=element):
-                    if not element in links:
-                        links.append(element);
-            print(f"DID: {len(links) - links_amount_start}")
-            
-            done += 1;
-            print(f"{done}/{do_length}")
-        link_data = links;
-
-
-
-
+    do_length = len(link_data)
+    for element in link_data:
+        links_amount_start = len(links);
+        if not element in links:
+            links.append({"link": element, "date": strftime("%Y%m%d%H%M%S", gmtime()), "search": search});
+        if len(links) - links_amount_start > 0:
+            print(f"add_to_link_list: DID {len(links) - links_amount_start}");
+            print(f"add_to_link_list: DONE {done}/{do_length}");
+        done += 1; 
 
 
     with open(links_file_url, "w") as f:
