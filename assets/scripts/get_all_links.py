@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup;
 
 
 
-def load (links_file_url, search, start=1, stop=30):
+def load (links_folder_url, search, start=1, stop=30):
     def get_search_data (search = "Coronavirus", stop = 11, start = 1):
         links = [];
         for page in range(start, stop):
@@ -29,12 +29,12 @@ def load (links_file_url, search, start=1, stop=30):
 
 
 
-    with open(links_file_url, "r") as f:
+    with open(links_folder_url + search + ".json", "r") as f:
         links = json.load(f);
 
 
     done = 0;
-
+    done_total = 0;
     link_data = get_search_data(search=search, start=start, stop=stop);
 
     do_length = len(link_data)
@@ -42,11 +42,14 @@ def load (links_file_url, search, start=1, stop=30):
         links_amount_start = len(links);
         if not element in links:
             links.append({"link": element, "date": strftime("%Y%m%d%H%M%S", gmtime()), "search": search});
+            done_total += 1;
         if len(links) - links_amount_start > 0:
             print(f"add_to_link_list: DID {len(links) - links_amount_start}");
             print(f"add_to_link_list: DONE {done}/{do_length}");
         done += 1; 
 
 
-    with open(links_file_url, "w") as f:
+    with open(links_folder_url + search + ".json", "w") as f:
         json.dump(links, f);
+
+    return done_total;

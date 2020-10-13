@@ -5,8 +5,8 @@ from time import gmtime, strftime
 from bs4 import BeautifulSoup;
 
 
-def load (texts_folder_url, links_file_url, search, max_iter=600):
-    with open(links_file_url, "r") as f:
+def load (texts_folder_url, links_folder_url, search, max_iter=600):
+    with open(links_folder_url + search + ".json", "r") as f:
         links = json.load(f);
 
     def get_date (element):
@@ -34,10 +34,10 @@ def load (texts_folder_url, links_file_url, search, max_iter=600):
         if done > max_iter:
             break;
         if element["search"] != search:
-            done += -1;
+            done += -2;
             continue;
         if element["link"] in links_done:
-            done += -1;
+            done += -2;
             continue;
         url = element["link"]
         page_data = requests.get(url);
@@ -52,7 +52,3 @@ def load (texts_folder_url, links_file_url, search, max_iter=600):
         save_data(texts);
         texts = {};
     
-    
-
-
-#load("../data/texts/", "../data/links.json", "Coronavirus");
